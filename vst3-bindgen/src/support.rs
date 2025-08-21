@@ -7,7 +7,7 @@ use com_scrape_types::{Construct, Guid, Header, InterfaceList, Wrapper};
 pub use com_scrape_types;
 pub use com_scrape_types::{Class, ComPtr, ComRef, ComWrapper, Interface};
 
-const fn tuid_as_guid(tuid: TUID) -> Guid {
+pub const fn tuid_as_guid(tuid: TUID) -> Guid {
     [
         tuid[0] as u8,
         tuid[1] as u8,
@@ -29,7 +29,7 @@ const fn tuid_as_guid(tuid: TUID) -> Guid {
 }
 
 #[inline]
-unsafe fn FUnknown_query_interface(this: *mut c_void, iid: &Guid) -> Option<*mut c_void> {
+pub unsafe fn FUnknown_query_interface(this: *mut c_void, iid: &Guid) -> Option<*mut c_void> {
     let ptr = this as *mut FUnknown;
     let mut obj = std::ptr::null_mut();
     let result = ((*(*ptr).vtbl).queryInterface)(ptr, iid.as_ptr() as *const TUID, &mut obj);
@@ -42,19 +42,19 @@ unsafe fn FUnknown_query_interface(this: *mut c_void, iid: &Guid) -> Option<*mut
 }
 
 #[inline]
-unsafe fn FUnknown_add_ref(this: *mut c_void) -> usize {
+pub unsafe fn FUnknown_add_ref(this: *mut c_void) -> usize {
     let ptr = this as *mut FUnknown;
     ((*(*ptr).vtbl).addRef)(ptr) as usize
 }
 
 #[inline]
-unsafe fn FUnknown_release(this: *mut c_void) -> usize {
+pub unsafe fn FUnknown_release(this: *mut c_void) -> usize {
     let ptr = this as *mut FUnknown;
     ((*(*ptr).vtbl).release)(ptr) as usize
 }
 
 impl FUnknown {
-    const fn make_vtbl<C, W, const OFFSET: isize>() -> FUnknownVtbl
+    pub const fn make_vtbl<C, W, const OFFSET: isize>() -> FUnknownVtbl
     where
         C: Class,
         W: Wrapper<C>,
