@@ -205,11 +205,13 @@ impl<'a, W: Write> RustPrinter<'a, W> {
                 ));
             }
 
+            let com_scrape_types_use_prefix = self.options.com_scrape_types_use_prefix.as_deref().unwrap_or("::com_scrape_types::");
+
             {
                 let mut bases = &record.bases;
                 while let Some(base) = bases.first() {
                     let base_name = &base.name;
-                    writeln!(self.sink, "{indent}unsafe impl ::com_scrape_types::Inherits<{base_name}> for {name} {{}}")?;
+                    writeln!(self.sink, "{indent}unsafe impl {com_scrape_types_use_prefix}Inherits<{base_name}> for {name} {{}}")?;
                     bases = &base.bases;
                 }
             }
@@ -228,9 +230,10 @@ impl<'a, W: Write> RustPrinter<'a, W> {
                 io::Error::new(ErrorKind::Other, "no value provided for release_fn")
             })?;
 
-            writeln!(self.sink, "{indent}impl ::com_scrape_types::Unknown for {name} {{")?;
+
+            writeln!(self.sink, "{indent}impl {com_scrape_types_use_prefix}Unknown for {name} {{")?;
             writeln!(self.sink, "{indent}    #[inline]")?;
-            writeln!(self.sink, "{indent}    unsafe fn query_interface(this: *mut Self, iid: &::com_scrape_types::Guid) -> Option<*mut c_void> {{")?;
+            writeln!(self.sink, "{indent}    unsafe fn query_interface(this: *mut Self, iid: &{com_scrape_types_use_prefix}Guid) -> Option<*mut c_void> {{")?;
             writeln!(self.sink, "{indent}        {query_interface_fn}(this as *mut c_void, iid)")?;
             writeln!(self.sink, "{indent}    }}")?;
             writeln!(self.sink, "{indent}    #[inline]")?;
@@ -243,11 +246,11 @@ impl<'a, W: Write> RustPrinter<'a, W> {
             writeln!(self.sink, "{indent}    }}")?;
             writeln!(self.sink, "{indent}}}")?;
 
-            writeln!(self.sink, "{indent}unsafe impl ::com_scrape_types::Interface for {name} {{")?;
+            writeln!(self.sink, "{indent}unsafe impl {com_scrape_types_use_prefix}Interface for {name} {{")?;
             writeln!(self.sink, "{indent}    type Vtbl = {name}Vtbl;")?;
-            writeln!(self.sink, "{indent}    const IID: ::com_scrape_types::Guid = {iid_string};")?;
+            writeln!(self.sink, "{indent}    const IID: {com_scrape_types_use_prefix}Guid = {iid_string};")?;
             writeln!(self.sink, "{indent}    #[inline]")?;
-            writeln!(self.sink, "{indent}    fn inherits(iid: &::com_scrape_types::Guid) -> bool {{")?;
+            writeln!(self.sink, "{indent}    fn inherits(iid: &{com_scrape_types_use_prefix}Guid) -> bool {{")?;
             write!(self.sink, "{indent}        iid == &Self::IID")?;
             if let Some(base) = record.bases.first() {
                 let base_name = &base.name;
@@ -328,14 +331,14 @@ impl<'a, W: Write> RustPrinter<'a, W> {
 
                 writeln!(self.sink, "{indent}impl<P> {name}Trait for P")?;
                 writeln!(self.sink, "{indent}where")?;
-                writeln!(self.sink, "{indent}    P: ::com_scrape_types::SmartPtr,")?;
-                writeln!(self.sink, "{indent}    P::Target: ::com_scrape_types::Inherits<{name}>,")?;
+                writeln!(self.sink, "{indent}    P: {com_scrape_types_use_prefix}SmartPtr,")?;
+                writeln!(self.sink, "{indent}    P::Target: {com_scrape_types_use_prefix}Inherits<{name}>,")?;
                 {
                     let mut bases = &record.bases;
                     while let Some(base) = bases.first() {
                         if !self.options.skip_interface_traits.contains(&base.name) {
                             let base_name = &base.name;
-                            writeln!(self.sink, "{indent}    P::Target: ::com_scrape_types::Inherits<{base_name}>,")?;
+                            writeln!(self.sink, "{indent}    P::Target: {com_scrape_types_use_prefix}Inherits<{base_name}>,")?;
                         }
                         bases = &base.bases;
                     }
@@ -377,8 +380,8 @@ impl<'a, W: Write> RustPrinter<'a, W> {
                 writeln!(self.sink, "{indent}impl {name} {{")?;
                 writeln!(self.sink, "{indent}    const fn make_vtbl<C, W, const OFFSET: isize>() -> {name}Vtbl")?;
                 writeln!(self.sink, "{indent}    where")?;
-                writeln!(self.sink, "{indent}        C: {name}Trait + ::com_scrape_types::Class,")?;
-                writeln!(self.sink, "{indent}        W: ::com_scrape_types::Wrapper<C>,")?;
+                writeln!(self.sink, "{indent}        C: {name}Trait + {com_scrape_types_use_prefix}Class,")?;
+                writeln!(self.sink, "{indent}        W: {com_scrape_types_use_prefix}Wrapper<C>,")?;
                 writeln!(self.sink, "{indent}    {{")?;
 
                 #[rustfmt::skip]
@@ -400,11 +403,11 @@ impl<'a, W: Write> RustPrinter<'a, W> {
                     }
                     writeln!(self.sink, "")?;
                     writeln!(self.sink, "{indent}        where")?;
-                    writeln!(self.sink, "{indent}            C: {name}Trait + ::com_scrape_types::Class,")?;
-                    writeln!(self.sink, "{indent}            W: ::com_scrape_types::Wrapper<C>,")?;
+                    writeln!(self.sink, "{indent}            C: {name}Trait + {com_scrape_types_use_prefix}Class,")?;
+                    writeln!(self.sink, "{indent}            W: {com_scrape_types_use_prefix}Wrapper<C>,")?;
                     writeln!(self.sink, "{indent}        {{")?;
                     writeln!(self.sink, "{indent}            let header_ptr = (this as *mut u8).offset(-OFFSET) as *mut Header<C>;")?;
-                    writeln!(self.sink, "{indent}            let ptr = <W as ::com_scrape_types::Wrapper<C>>::data_from_header(header_ptr);")?;
+                    writeln!(self.sink, "{indent}            let ptr = <W as {com_scrape_types_use_prefix}Wrapper<C>>::data_from_header(header_ptr);")?;
                     writeln!(self.sink, "{indent}            (*ptr).{method_name}(")?;
 
                     self.indent_level += 4;
@@ -434,13 +437,13 @@ impl<'a, W: Write> RustPrinter<'a, W> {
                 writeln!(self.sink, "{indent}    }}")?;
                 writeln!(self.sink, "{indent}}}")?;
 
-                writeln!(self.sink, "{indent}unsafe impl<C, W, const OFFSET: isize> ::com_scrape_types::Construct<C, W, OFFSET> for {name}")?;
+                writeln!(self.sink, "{indent}unsafe impl<C, W, const OFFSET: isize> {com_scrape_types_use_prefix}Construct<C, W, OFFSET> for {name}")?;
                 writeln!(self.sink, "{indent}where")?;
                 writeln!(
                     self.sink,
-                    "{indent}    C: {name}Trait + ::com_scrape_types::Class,"
+                    "{indent}    C: {name}Trait + {com_scrape_types_use_prefix}Class,"
                 )?;
-                writeln!(self.sink, "{indent}    W: ::com_scrape_types::Wrapper<C>,")?;
+                writeln!(self.sink, "{indent}    W: {com_scrape_types_use_prefix}Wrapper<C>,")?;
                 writeln!(self.sink, "{indent}{{")?;
                 writeln!(self.sink, "{indent}    const OBJ: Self = {name} {{")?;
                 writeln!(

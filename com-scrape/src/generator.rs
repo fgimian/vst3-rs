@@ -32,6 +32,7 @@ pub struct Generator {
     pub(crate) query_interface_fn: Option<String>,
     pub(crate) add_ref_fn: Option<String>,
     pub(crate) release_fn: Option<String>,
+    pub(crate) com_scrape_types_use_prefix: Option<String>,
 }
 
 impl Default for Generator {
@@ -46,6 +47,7 @@ impl Default for Generator {
             query_interface_fn: None,
             add_ref_fn: None,
             release_fn: None,
+            com_scrape_types_use_prefix: None,
         }
     }
 }
@@ -140,6 +142,14 @@ impl Generator {
     /// the same type signature as `Unknown::release`.
     pub fn release_fn<T: AsRef<str>>(mut self, f: T) -> Self {
         self.release_fn = Some(f.as_ref().to_string());
+        self
+    }
+
+    /// Specifies the prefix to use in imports relating to com_scrape_types types. If you are
+    /// generating bindings for your own interface, you'll want to set this to
+    /// "vst3::com_scrape_types".
+    pub fn com_scrape_types_use_prefix<T: AsRef<str>>(mut self, f: T) -> Self {
+        self.com_scrape_types_use_prefix = Some(f.as_ref().to_string());
         self
     }
 
